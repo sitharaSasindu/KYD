@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "872253859175",
+    "firebase_url": "https://knowyourdrug-5f275.firebaseio.com",
+    "project_id": "knowyourdrug-5f275",
+    "storage_bucket": "knowyourdrug-5f275.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:872253859175:android:2d733c6e853d61d3d9fbc2",
+        "android_client_info": {
+          "package_name": "com.fyp.kyd"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "872253859175-uhpji3d5ih3872s0dgtejthd27tqv3ds.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCpFoL0qn9jc6foGB-QGdRJEu_iSFHDOzQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "872253859175-uhpji3d5ih3872s0dgtejthd27tqv3ds.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -10,6 +10,8 @@ import com.fyp.auth.LoginActivity;
 
 //import com.fyp.auth.LoginActivity;
 
+//import com.fyp.auth.LoginActivity;
+
 public class MainActivity extends AppCompatActivity {
 
     Button scanQR;
