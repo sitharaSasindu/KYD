@@ -7,4 +7,8 @@
     <dimen name="lbl_movie_name">28dp</dimen>
     <dimen name="img_poster_height">220dp</dimen>
     <dimen name="dimen_40">40dp</dimen>
+
+
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
 </resources>

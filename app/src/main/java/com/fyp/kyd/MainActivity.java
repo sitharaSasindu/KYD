@@ -6,15 +6,13 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
+//import com.fyp.auth.LoginActivity;
+
 import com.fyp.auth.LoginActivity;
-
-//import com.fyp.auth.LoginActivity;
-
-//import com.fyp.auth.LoginActivity;
 
 public class MainActivity extends AppCompatActivity {
 
-    Button scanQR;
+    Button scanQR, firebase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,9 +28,22 @@ public class MainActivity extends AppCompatActivity {
             finish();
         }
     });
+
+        firebase.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(MainActivity.this, QRActivity.class);
+                startActivity(i);
+                finish();
+            }
+        });
+
+
     }
 
-    private void init() {
+    private void init()
+    {
         scanQR = (Button) findViewById(R.id.qr);
+        firebase = (Button) findViewById(R.id.firebase);
     }
 }

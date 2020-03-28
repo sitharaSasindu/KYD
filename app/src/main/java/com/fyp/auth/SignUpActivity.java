@@ -67,37 +67,37 @@ public class SignUpActivity extends AppCompatActivity {
             }
         });
 
-//        FirebaseDatabase database = FirebaseDatabase.getInstance();
-//        DatabaseReference myRef = database.getReference("message");
-//
-//        myRef.setValue("Hello, World!");
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference myRef = database.getReference("message");
 
-//        mFirebaseInstance = FirebaseDatabase.getInstance();
-//
-//        // get reference to 'users' node
-//        mFirebaseDatabase = mFirebaseInstance.getReference("users");
-//
-//        // store app title to 'app_title' node
-//        mFirebaseInstance.getReference("app_title").setValue("Realtime Database");
-//
-//        // app_title change listener
-//        mFirebaseInstance.getReference("app_title").addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                Log.e(TAG, "App title updated");
-//
-//                String appTitle = dataSnapshot.getValue(String.class);
-//
-//                // update toolbar title
-//                getSupportActionBar().setTitle(appTitle);
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError error) {
-//                // Failed to read value
-//                Log.e(TAG, "Failed to read app title value.", error.toException());
-//            }
-//        });
+        myRef.setValue("Hello, World!");
+
+        mFirebaseInstance = FirebaseDatabase.getInstance();
+
+        // get reference to 'users' node
+        mFirebaseDatabase = mFirebaseInstance.getReference("users");
+
+        // store app title to 'app_title' node
+        mFirebaseInstance.getReference("app_title").setValue("Realtime Database");
+
+        // app_title change listener
+        mFirebaseInstance.getReference("app_title").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Log.e(TAG, "App title updated");
+
+                String appTitle = dataSnapshot.getValue(String.class);
+
+                // update toolbar title
+                getSupportActionBar().setTitle(appTitle);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Failed to read value
+                Log.e(TAG, "Failed to read app title value.", error.toException());
+            }
+        });
     }
 
     private void createUser(String name, String email, String mobile) {
@@ -117,10 +117,10 @@ public class SignUpActivity extends AppCompatActivity {
     public void signup() {
         Log.d(TAG, "Signup");
 
-        if (!validate()) {
-            onSignupFailed();
-            return;
-        }
+//        if (!validate()) {
+//            onSignupFailed();
+//            return;
+//        }
 
         _signupButton.setEnabled(false);
 
@@ -138,9 +138,11 @@ public class SignUpActivity extends AppCompatActivity {
 
         // TODO: Implement your own signup logic here.
 
-//        if (TextUtils.isEmpty(userId)) {
-//            createUser(name, email, mobile);
-//        }
+        Toast.makeText(getBaseContext(), "testt", Toast.LENGTH_LONG).show();
+
+        if (TextUtils.isEmpty(userId)) {
+            createUser(name, email, mobile);
+        }
 
 
 
@@ -214,6 +216,10 @@ public class SignUpActivity extends AppCompatActivity {
         }
 
         return valid;
+    }
+
+    public void setKeys(){
+
     }
 
 }
