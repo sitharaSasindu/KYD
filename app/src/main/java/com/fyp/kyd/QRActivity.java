@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -20,8 +21,10 @@ public class QRActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         // making toolbar transparent
-        transparentToolbar();
-
+//        transparentToolbar();
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setContentView(R.layout.activity_qr);
 
         findViewById(R.id.btn_scan).setOnClickListener(new View.OnClickListener() {

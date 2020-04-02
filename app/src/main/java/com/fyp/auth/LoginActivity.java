@@ -1,7 +1,8 @@
 package com.fyp.auth;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,24 +12,48 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.fyp.kyd.MainActivity;
 import com.fyp.kyd.QRActivity;
 import com.fyp.kyd.R;
+//import com.github.tntkhang.keystore_secure.KeystoreSecure;
+
+import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.cert.CertificateException;
+import java.util.ArrayList;
+import java.util.Collections;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+
+import static shadow.com.google.common.base.Strings.isNullOrEmpty;
 
 public class LoginActivity extends AppCompatActivity {
     private static final String TAG = "LoginActivity";
     private static final int REQUEST_SIGNUP = 0;
 
+    private Encryption encryptor;
+    private Decryption decryptor;
+    private static final String KYD_ALIAS = "kydalias";
+
+    private java.security.KeyStore keyStore;
     @BindView(R.id.input_email)
     EditText _emailText;
-    @BindView(R.id.input_password) EditText _passwordText;
+    @BindView(R.id.input_password)
+    EditText _passwordText;
     @BindView(R.id.btn_login)
     Button _loginButton;
     @BindView(R.id.link_signup)
     TextView _signupLink;
+
+    private static final String STORE_KEY_1 = "STORE_KEY_1";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -36,11 +61,30 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         ButterKnife.bind(this);
 
+        AndroidKeystore.init(getApplicationContext());
+
         _loginButton.setOnClickListener(new View.OnClickListener() {
 
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onClick(View v) {
-                login();
+                try {
+                    try {
+                        login();
+                    } catch (NoSuchProviderException e) {
+                        e.printStackTrace();
+                    } catch (InvalidAlgorithmParameterException e) {
+                        e.printStackTrace();
+                    }
+                } catch (CertificateException e) {
+                    e.printStackTrace();
+                } catch (NoSuchAlgorithmException e) {
+                    e.printStackTrace();
+                } catch (KeyStoreException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         });
 
@@ -57,17 +101,14 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    public void login() {
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public void login() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, NoSuchProviderException, InvalidAlgorithmParameterException {
         Log.d(TAG, "Login");
 
-        Intent i = new Intent(LoginActivity.this, QRActivity.class);
-        startActivity(i);
-        finish();
-
-        if (!validate()) {
-            onLoginFailed();
-            return;
-        }
+//        if (!validate()) {
+//            onLoginFailed();
+//            return;
+//        }
 
         _loginButton.setEnabled(false);
 
@@ -80,19 +121,53 @@ public class LoginActivity extends AppCompatActivity {
         String email = _emailText.getText().toString();
         String password = _passwordText.getText().toString();
 
-        // TODO: Implement your own authentication logic here.
+        String KEY_NAME = "CHOOSE_YOUR_KEYNAME_FOR_STORAGE";
 
-        new android.os.Handler().postDelayed(
-                new Runnable() {
-                    public void run() {
-                        // On complete call either onLoginSuccess or onLoginFailed
-                        onLoginSuccess();
-                        // onLoginFailed();
+        AndroidKeystore c = new AndroidKeystore(KEY_NAME);
+
+        c.get(KEY_NAME);
+        try {
+            String decrypted = c.decrypt(c.get(KEY_NAME));
+            String encryptedPrivateKeyString = PassEncryption.decrypt(decrypted, password);
+
+            if(isNullOrEmpty(encryptedPrivateKeyString)){
+                new android.os.Handler().postDelayed(
+                        new Runnable() {
+                            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+                            public void run() {
+                                 onLoginFailed();
 //                        progressDialog.dismiss();
-                    }
-                }, 3000);
+                            }
+                        }, 3000);
+            } else {
+                new android.os.Handler().postDelayed(
+                        new Runnable() {
+                            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+                            public void run() {
+                                onLoginSuccess();
+//                        progressDialog.dismiss();
+                            }
+                        }, 3000);
+            }
+        } catch (NoSuchPaddingException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (BadPaddingException e) {
+            e.printStackTrace();
+        } catch (IllegalBlockSizeException e) {
+            e.printStackTrace();
+        }
+
+
+
     }
 
+    public ArrayList<String> getAllAliasesInTheKeystore() throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
+        keyStore = java.security.KeyStore.getInstance("AndroidKeyStore");
+        keyStore.load(null);
+        return Collections.list(keyStore.aliases());
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -112,14 +187,18 @@ public class LoginActivity extends AppCompatActivity {
         moveTaskToBack(true);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void onLoginSuccess() {
-        _loginButton.setEnabled(true);
+        Toast.makeText(getBaseContext(), "Login Success", Toast.LENGTH_LONG).show();
+        Intent i = new Intent(LoginActivity.this, QRActivity.class);
+        startActivity(i);
         finish();
+        _loginButton.setEnabled(true);
+//        finish();
     }
 
     public void onLoginFailed() {
         Toast.makeText(getBaseContext(), "Login failed", Toast.LENGTH_LONG).show();
-
         _loginButton.setEnabled(true);
     }
 
@@ -145,4 +224,5 @@ public class LoginActivity extends AppCompatActivity {
 
         return valid;
     }
+
 }

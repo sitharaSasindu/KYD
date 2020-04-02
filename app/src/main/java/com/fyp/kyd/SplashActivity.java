@@ -5,6 +5,8 @@ import android.os.Handler;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
+import com.fyp.auth.LoginActivity;
+
 //import com.fyp.auth.LoginActivity;
 
 public class SplashActivity extends AppCompatActivity {
@@ -20,7 +22,7 @@ public class SplashActivity extends AppCompatActivity {
             @Override
             public void run() {
                 // This method will be executed once the timer is over
-                Intent i = new Intent(SplashActivity.this, MainActivity.class);
+                Intent i = new Intent(SplashActivity.this, LoginActivity.class);
                 startActivity(i);
                 finish();
             }

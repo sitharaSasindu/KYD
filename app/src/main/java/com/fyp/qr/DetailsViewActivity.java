@@ -31,7 +31,7 @@ public class DetailsViewActivity extends AppCompatActivity {
     private static final String TAG = DetailsViewActivity.class.getSimpleName();
 
     // url to search barcode
-    private static final String URL = "https://api.androidhive.info/barcodes/search.php?code=";
+    private static final String URL = "http://104.197.159.148:8080/api/query/history/";
 
     private TextView txtName, txtDuration, txtDirector, txtGenre, txtRating, txtPrice, txtError;
     private ImageView imgPoster;
@@ -120,7 +120,7 @@ public class DetailsViewActivity extends AppCompatActivity {
      */
     private void renderMovie(JSONObject response) {
         try {
-
+System.out.println(response);
             // converting json to movie object
             Movie movie = new Gson().fromJson(response.toString(), Movie.class);
 
