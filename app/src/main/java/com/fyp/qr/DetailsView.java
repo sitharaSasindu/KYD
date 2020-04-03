@@ -69,7 +69,7 @@ public class DetailsView extends LinearLayout {
 
         // adding punching holes on the ticket by erasing them
         cv.drawCircle(0, 0, holeRadius, eraser); // top-left hole
-        cv.drawCircle(w / 2, 0, holeRadius, eraser); // top-middle hole
+//        cv.drawCircle(w / 2, 0, holeRadius, eraser); // top-middle hole
         cv.drawCircle(w, 0, holeRadius, eraser); // top-right
         cv.drawCircle(0, h - pxFromDp(getContext(), holesBottomMargin), holeRadius, eraser); // bottom-left hole
         cv.drawCircle(w, h - pxFromDp(getContext(), holesBottomMargin), holeRadius, eraser); // bottom right hole

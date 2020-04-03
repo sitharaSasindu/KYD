@@ -22,9 +22,9 @@ public class QRActivity extends AppCompatActivity {
 
         // making toolbar transparent
 //        transparentToolbar();
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+//        Toolbar toolbar = findViewById(R.id.toolbar);
+//        setSupportActionBar(toolbar);
+//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setContentView(R.layout.activity_qr);
 
         findViewById(R.id.btn_scan).setOnClickListener(new View.OnClickListener() {

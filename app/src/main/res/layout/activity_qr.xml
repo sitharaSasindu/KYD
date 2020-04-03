@@ -51,7 +51,7 @@
         android:paddingRight="20dp"
         android:fontFamily="sans-serif-medium"
         android:text="Scan QR Code"
-        android:textColor="@color/jet"
+        android:textColor="@color/colorPrimaryDark"
         android:textSize="18sp" />
 
 </RelativeLayout>

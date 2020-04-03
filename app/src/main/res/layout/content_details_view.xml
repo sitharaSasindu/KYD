@@ -34,7 +34,7 @@
         android:visibility="gone">
 
         <TextView
-            android:id="@+id/director"
+            android:id="@+id/owner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="5dp"
@@ -66,6 +66,11 @@
             android:layout_marginTop="@dimen/activity_margin"
             android:scaleType="centerCrop" />
 
+
+
+
+
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -85,11 +90,11 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="5dp"
                     android:fontFamily="sans-serif-condensed"
-                    android:text="@string/lbl_duration"
+                    android:text="Product"
                     android:textSize="12dp" />
 
                 <TextView
-                    android:id="@+id/duration"
+                    android:id="@+id/product"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-condensed"
@@ -108,11 +113,11 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="5dp"
                     android:fontFamily="sans-serif-condensed"
-                    android:text="@string/lbl_genre"
+                    android:text="Manufacturer"
                     android:textSize="12dp" />
 
                 <TextView
-                    android:id="@+id/genre"
+                    android:id="@+id/manufacturer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-condensed"
@@ -123,10 +128,18 @@
 
         </LinearLayout>
 
+
+
+
+
+
+
+
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="9dp"
             android:orientation="horizontal"
             android:paddingLeft="16dp"
             android:paddingRight="16dp"
@@ -143,14 +156,15 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="5dp"
                     android:fontFamily="sans-serif-condensed"
-                    android:text="@string/lbl_rating"
+                    android:text="Quantity"
                     android:textSize="12dp" />
 
                 <TextView
-                    android:id="@+id/rating"
+                    android:id="@+id/qty"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-condensed"
+                    android:textAllCaps="true"
                     android:textColor="@color/lbl_value"
                     android:textSize="22dp" />
             </LinearLayout>
@@ -166,11 +180,90 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="5dp"
                     android:fontFamily="sans-serif-condensed"
-                    android:text="@string/lbl_price"
+                    android:text="Manufactured Date"
                     android:textSize="12dp" />
 
                 <TextView
-                    android:id="@+id/price"
+                    android:id="@+id/manu_date"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-condensed"
+                    android:textColor="@color/lbl_value"
+                    android:textSize="22dp" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+
+
+
+
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="9dp"
+            android:paddingLeft="@dimen/activity_margin"
+            android:paddingRight="@dimen/activity_margin"
+            android:weightSum="2">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:fontFamily="sans-serif-condensed"
+                    android:text="Expiration Date"
+                    android:textSize="12dp" />
+
+                <TextView
+                    android:id="@+id/expiration"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-condensed"
+                    android:textAllCaps="true"
+                    android:textColor="@color/lbl_value"
+                    android:textSize="22dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:fontFamily="sans-serif-condensed"
+                    android:text="Verify Details"
+                    android:textColor="@color/jet"
+                    android:textSize="12dp" />
+
+                <Button
+                    android:id="@+id/v"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginBottom="10dp"
+                    android:background="@android:color/transparent"
+                    android:fontFamily="sans-serif-condensed"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:paddingLeft="@dimen/activity_margin"
+                    android:paddingRight="@dimen/activity_margin"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="26dp" /> <TextView
+                    android:id="@+id/ef"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-condensed"
