@@ -1,5 +1,6 @@
 package com.fyp.auth;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Handler;
@@ -34,6 +35,8 @@ import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static shadow.com.google.common.base.Strings.isNullOrEmpty;
 
 public class SignUpActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
 
@@ -84,8 +87,6 @@ public class SignUpActivity extends AppCompatActivity implements AdapterView.OnI
                 IOException e) {
             e.printStackTrace();
         }
-
-
 
         Spinner spinner = (Spinner) findViewById(R.id.spinner_array);
         spinner.setOnItemSelectedListener(this);
@@ -180,11 +181,11 @@ public class SignUpActivity extends AppCompatActivity implements AdapterView.OnI
 
         _signupButton.setEnabled(false);
 
-//        final ProgressDialog progressDialog = new ProgressDialog(SignUpActivity.this,
-//                R.style.AppTheme_Dark_Dialog);
-//        progressDialog.setIndeterminate(true);
-//        progressDialog.setMessage("Creating Account...");
-//        progressDialog.show();
+        final ProgressDialog progressDialog = new ProgressDialog(SignUpActivity.this,
+                R.style.AppTheme_Dark_Dialog);
+        progressDialog.setIndeterminate(true);
+        progressDialog.setMessage("Creating Account...");
+        progressDialog.show();
 
         String name = _nameText.getText().toString();
         String email = _emailText.getText().toString();
@@ -202,8 +203,6 @@ public class SignUpActivity extends AppCompatActivity implements AdapterView.OnI
             createUser(name, email, mobile, role, publicKey);
         }
 
-
-
         new Handler().postDelayed(
                 new Runnable() {
                     public void run() {
@@ -211,7 +210,7 @@ public class SignUpActivity extends AppCompatActivity implements AdapterView.OnI
                         // depending on success
                         onSignupSuccess();
                         // onSignupFailed();
-//                        progressDialog.dismiss();
+                        progressDialog.dismiss();
                     }
                 }, 3000);
     }
@@ -237,6 +236,14 @@ public class SignUpActivity extends AppCompatActivity implements AdapterView.OnI
         String mobile = _mobileText.getText().toString();
         String password = _passwordText.getText().toString();
         String reEnterPassword = _reEnterPasswordText.getText().toString();
+        String roleCheck = role;
+
+
+            if(roleCheck.equals("Select Role")){
+                Toast.makeText(getApplicationContext(), "Select a Role", Toast.LENGTH_LONG).show();
+                valid = false;
+            }
+
 
         if (name.isEmpty() || name.length() < 3) {
             _nameText.setError("at least 3 characters");
@@ -293,15 +300,9 @@ public class SignUpActivity extends AppCompatActivity implements AdapterView.OnI
 
             AndroidKeystore c = new AndroidKeystore(KEY_NAME);
 
-            System.out.println("hhhhhhhhhhhhhhhhhh");
             System.out.println(encryptedPrivateKeyString);
             String encrypted = c.encrypt(encryptedPrivateKeyString); // returns base 64 data: 'BASE64_DATA,BASE64_IV'
             c.save(KEY_NAME, encrypted);
-
-
-
-
-
 
         }catch (Exception e){
             e.printStackTrace();
@@ -314,7 +315,7 @@ public class SignUpActivity extends AppCompatActivity implements AdapterView.OnI
         String item = parent.getItemAtPosition(pos).toString();
         // Showing selected spinner item
         if(item.equals("Select Role")){
-            Toast.makeText(parent.getContext(), "Select Your Role ", Toast.LENGTH_LONG).show();
+//            Toast.makeText(parent.getContext(), "Select Your Role ", Toast.LENGTH_LONG).show();
         }else {
 //            Toast.makeText(parent.getContext(), "Selected: " + item, Toast.LENGTH_LONG).show();
         }

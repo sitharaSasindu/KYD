@@ -1,5 +1,6 @@
 package com.fyp.auth;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
@@ -112,11 +113,11 @@ public class LoginActivity extends AppCompatActivity {
 
         _loginButton.setEnabled(false);
 
-//        final ProgressDialog progressDialog = new ProgressDialog(LoginActivity.this,
-//                R.style.AppTheme_Dark_Dialog);
-//        progressDialog.setIndeterminate(true);
-//        progressDialog.setMessage("Authenticating...");
-//        progressDialog.show();
+        final ProgressDialog progressDialog = new ProgressDialog(LoginActivity.this,
+                R.style.AppTheme_Dark_Dialog);
+        progressDialog.setIndeterminate(true);
+        progressDialog.setMessage("Authenticating...");
+        progressDialog.show();
 
         String email = _emailText.getText().toString();
         String password = _passwordText.getText().toString();
@@ -136,7 +137,7 @@ public class LoginActivity extends AppCompatActivity {
                             @RequiresApi(api = Build.VERSION_CODES.KITKAT)
                             public void run() {
                                  onLoginFailed();
-//                        progressDialog.dismiss();
+                        progressDialog.dismiss();
                             }
                         }, 3000);
             } else {
@@ -145,7 +146,7 @@ public class LoginActivity extends AppCompatActivity {
                             @RequiresApi(api = Build.VERSION_CODES.KITKAT)
                             public void run() {
                                 onLoginSuccess();
-//                        progressDialog.dismiss();
+                        progressDialog.dismiss();
                             }
                         }, 3000);
             }
@@ -189,7 +190,7 @@ public class LoginActivity extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void onLoginSuccess() {
-        Toast.makeText(getBaseContext(), "Login Success", Toast.LENGTH_LONG).show();
+//        Toast.makeText(getBaseContext(), "Login Success", Toast.LENGTH_LONG).show();
         Intent i = new Intent(LoginActivity.this, QRActivity.class);
         startActivity(i);
         finish();
