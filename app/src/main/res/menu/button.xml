@@ -1,0 +1,16 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools" tools:context=".DetailsViewActivity">
+    <item
+        android:id="@+id/mybutton"
+        android:title=""
+        app:showAsAction="always"
+        android:icon="@drawable/checkdocument128"
+        />
+    <item
+        android:id="@+id/history"
+        android:title=""
+        app:showAsAction="always"
+        android:icon="@drawable/ii9"
+        />
+</menu>

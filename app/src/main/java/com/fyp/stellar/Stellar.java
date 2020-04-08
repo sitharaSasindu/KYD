@@ -17,6 +17,16 @@ public class Stellar {
 
     public static KeyPair pair = null;
 
+    public static String getTransactionhashStellar() {
+        return transactionhashStellar;
+    }
+
+    public static void setTransactionhashStellar(String transactionhashStellar) {
+        Stellar.transactionhashStellar = transactionhashStellar;
+    }
+
+    public static String transactionhashStellar = null;
+
     public static void CreateAccount() throws IOException {
         pair = KeyPair.random();
 
@@ -66,6 +76,7 @@ public class Stellar {
             SubmitTransactionResponse response = server.submitTransaction(transaction);
             System.out.println("--------------------------");
             System.out.println(response.getHash());
+            setTransactionhashStellar(response.getHash());
             return response;
         } catch (Exception e) {
             String msg = "Failed to manageData: ";

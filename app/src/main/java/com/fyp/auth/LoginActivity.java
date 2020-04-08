@@ -122,7 +122,7 @@ public class LoginActivity extends AppCompatActivity {
         String email = _emailText.getText().toString();
         String password = _passwordText.getText().toString();
 
-        String KEY_NAME = "CHOOSE_YOUR_KEYNAME_FOR_STORAGE";
+        String KEY_NAME = "KYD";
 
         AndroidKeystore c = new AndroidKeystore(KEY_NAME);
 

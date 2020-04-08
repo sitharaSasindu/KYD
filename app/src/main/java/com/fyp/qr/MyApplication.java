@@ -7,12 +7,21 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
 
+import android.app.Application;
+import android.text.TextUtils;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.Volley;
+
 public class MyApplication extends Application {
 
     public static final String TAG = MyApplication.class
             .getSimpleName();
 
     private RequestQueue mRequestQueue;
+    private ImageLoader mImageLoader;
 
     private static MyApplication mInstance;
 
@@ -33,6 +42,7 @@ public class MyApplication extends Application {
 
         return mRequestQueue;
     }
+
 
     public <T> void addToRequestQueue(Request<T> req, String tag) {
         // set the default tag if tag is empty

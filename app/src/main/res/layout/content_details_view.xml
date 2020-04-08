@@ -250,7 +250,7 @@
                     android:textSize="12dp" />
 
                 <Button
-                    android:id="@+id/v"
+                    android:id="@+id/verify"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentBottom="true"
@@ -262,14 +262,8 @@
                     android:paddingLeft="@dimen/activity_margin"
                     android:paddingRight="@dimen/activity_margin"
                     android:textColor="@color/colorPrimary"
-                    android:textSize="26dp" /> <TextView
-                    android:id="@+id/ef"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="sans-serif-condensed"
-                    android:textAllCaps="true"
-                    android:textColor="@color/lbl_value"
-                    android:textSize="22dp" />
+                    android:textSize="26dp"
+                    tools:text="Verify" />
             </LinearLayout>
 
         </LinearLayout>

@@ -33,7 +33,7 @@
             android:layout_marginTop="30dp"
             android:fontFamily="sans-serif-light"
             android:gravity="center"
-            android:text="Scan the QR code on the poster and book your movie tickets"
+            android:text="Scan the QR code on the package to view details"
             android:textColor="@color/jet"
             android:textSize="16dp" />
     </LinearLayout>

@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.support.annotation.RequiresApi;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -13,6 +14,7 @@ import android.support.v7.widget.Toolbar;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
@@ -25,38 +27,60 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.android.volley.Request;
+import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.fyp.auth.AndroidKeystore;
+import com.fyp.auth.LoginActivity;
 import com.fyp.auth.PassEncryption;
+import com.fyp.kyd.HistoryActivity;
 import com.fyp.kyd.R;
 import com.fyp.kyd.SigningActivity;
+import com.fyp.kyd.SplashActivity;
+import com.fyp.kyd.VerificationActivity;
+import com.fyp.rsa.RSA;
+import com.fyp.stellar.Stellar;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
+
+import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyStoreException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.acl.Owner;
 import java.security.cert.CertificateException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+
 import static shadow.com.google.common.base.Strings.isNullOrEmpty;
 
 
 public class DetailsViewActivity extends AppCompatActivity  {
     private static final String TAG = DetailsViewActivity.class.getSimpleName();
 
+//    Button verify =  findViewById(R.id.verify);
     // url to search barcode
-    private static final String URL = "http://104.197.159.148:8080/api/query/history/";
+    private static final String URL = "http://35.223.22.68:8080/api/query/";
 
-    String signedPackageID, signedProductID, signedProductName, signedMnufacturer, signedManufactureDate, signedExpireDate, signedQuantity, signedOwner, timestamp, signedStellarHash, signedStatus, signedTemparature;
+    String signedPackageID, signedProductID, signedProductName, signedMnufacturer, signedManufactureDate, signedExpireDate, signedQuantity, signedOwner, timestamp, signedStellarHash, signedStatus, signedTemparature, signedOwnerid, signedPackagePosition;
     private TextView txtPackage, txtProduct, txtOwner, txtManufacturer, txtQty, txtManudate,txtExpire, txtError;
     private ImageView imgPoster;
     private Button btnAccept;
@@ -64,19 +88,30 @@ public class DetailsViewActivity extends AppCompatActivity  {
     private DetailsView detailsView;
     Package drugPackage = null;
 
+    public static String PvtKey = null;
+    public static String PubKey = null;
+
     String myLog = "myLog";
 
     AlphaAnimation inAnimation;
     AlphaAnimation outAnimation;
 
+    Stellar stellar = new Stellar();
     FrameLayout progressBarHolder;
-    Button button;
+    RequestQueue queue;
 
+    static String ipackageID, iproductId, iproducName, itemparature, iquantity, iowner, imanufacturer, iexpireDate, imanufactureDate, istatus, istellarHash, ipackagePosition, iownerid, itimestamp = null;
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_details_view);
 
+         queue = Volley.newRequestQueue(this);
+
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
 //        Toolbar toolbar = findViewById(R.id.toolbar);
 //        setSupportActionBar(toolbar);
 //        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -103,32 +138,47 @@ public class DetailsViewActivity extends AppCompatActivity  {
         // close the activity in case of empty barcode
         if (TextUtils.isEmpty(barcode)) {
             Toast.makeText(getApplicationContext(), "QR is empty!", Toast.LENGTH_LONG).show();
-            finish();
+//            finish();
         }
+
+        findViewById(R.id.verify).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+              verify();
+            }
+        });
+
 
         findViewById(R.id.btn_buy).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 btnAccept.setEnabled(true);
                 popUpEditText();
-
-
             }
         });
         // search the barcode
         searchBarcode(barcode);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private void searchBarcode(String barcode) {
+
+        System.out.println("======================");
+        System.out.println(PassEncryption.encrypt("PKG2", "kydqr"));
+        System.out.println(PassEncryption.encrypt("PKG1", "kydqr"));
+        System.out.println("======================");
+        String barcodeDecoded = PassEncryption.decrypt(barcode, "kydqr");
+        System.out.println(barcodeDecoded);
+
+
         // making volley's json request
         JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.GET,
-                URL + barcode, null,
+                URL + barcodeDecoded, null,
                 new Response.Listener<JSONObject>() {
 
                     @Override
                     public void onResponse(JSONObject response) {
                         Log.e(TAG, "Ticket response: " + response.toString());
-
                         // check for success status
                         if (!response.has("error")) {
                             // received drugPackage response
@@ -156,6 +206,13 @@ public class DetailsViewActivity extends AppCompatActivity  {
         progressBar.setVisibility(View.GONE);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // R.menu.mymenu is a reference to an xml file named mymenu.xml which should be inside your res/menu directory.
+        // If you don't have res/menu, just create a directory named "menu" inside res
+        getMenuInflater().inflate(R.menu.button, menu);
+        return true;
+    }
 
 
     /**
@@ -168,10 +225,24 @@ public class DetailsViewActivity extends AppCompatActivity  {
 
             System.out.println(replaced);
 
-
             // converting json to drugPackage object
              drugPackage = new Gson().fromJson(replaced, Package.class);
             if (drugPackage != null) {
+                ipackageID = drugPackage.getPackageID();
+                iproducName = drugPackage.getProductName();
+                iproductId =  drugPackage.getProductID();
+                iowner = drugPackage.getOwner2();
+                iexpireDate = drugPackage.getExpireDate();
+                imanufactureDate = drugPackage.getManufacturedDate();
+                imanufacturer = drugPackage.getManufacturer();
+                itemparature = drugPackage.getTemperature();
+                iquantity = drugPackage.getQuantity();
+                istatus = drugPackage.getStatus();
+                istellarHash = drugPackage.getStellarHash();
+                iownerid = drugPackage.getOwnerId();
+                ipackagePosition = drugPackage.getPackagePosition();
+                itimestamp = drugPackage.getTimestamp();
+
                 txtPackage.setText(drugPackage.getPackageID());
                 txtOwner.setText(drugPackage.getOwner());
                 txtProduct.setText(drugPackage.getProductName());
@@ -180,15 +251,13 @@ public class DetailsViewActivity extends AppCompatActivity  {
                 txtExpire.setText(drugPackage.getExpireDate());
                 txtManudate.setText(drugPackage.getManufacturedDate());
 
-                if (drugPackage.getStatus().equals("0")) {
-                    imgPoster.setBackgroundResource(R.drawable.a1);
-                } else if (drugPackage.getStatus().equals("1")) {
+                if (drugPackage.getPackagePosition().equals("0")) {
                     imgPoster.setBackgroundResource(R.drawable.a2);
-                } else if (drugPackage.getStatus().equals("2")) {
-                    imgPoster.setBackgroundResource(R.drawable.a4);
-                } else if (drugPackage.getStatus().equals("2")) {
+                } else if (drugPackage.getPackagePosition().equals("1")) {
+                    imgPoster.setBackgroundResource(R.drawable.a5);
+                } else if (drugPackage.getPackagePosition().equals("2")) {
                     imgPoster.setBackgroundResource(R.drawable.a8);
-                } else if (drugPackage.getStatus().equals("1")) {
+                } else if (drugPackage.getPackagePosition().equals("3")) {
                     imgPoster.setBackgroundResource(R.drawable.a7);
                 }
 
@@ -226,6 +295,15 @@ public class DetailsViewActivity extends AppCompatActivity  {
         if (item.getItemId() == android.R.id.home) {
             finish();
         }
+        int id = item.getItemId();
+
+        if (id == R.id.mybutton) {
+          verify();
+        }
+
+        if (id == R.id.history) {
+            showHistory();
+        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -241,9 +319,9 @@ public class DetailsViewActivity extends AppCompatActivity  {
         String Owner;
         String Status;
         String StellarHash;
-
-        @SerializedName("released")
-        boolean isReleased;
+        String OwnerID;
+        String Timestamp;
+        String PackagePosition;
 
         public String getPackageID() {
             return PackageID;
@@ -271,6 +349,9 @@ public class DetailsViewActivity extends AppCompatActivity  {
         public String getOwner() {
             return "Current Owner: " + Owner;
         }
+        public String getOwner2() {
+            return  Owner;
+        }
 
         public String getStatus() {
             return Status;
@@ -291,11 +372,23 @@ public class DetailsViewActivity extends AppCompatActivity  {
         public String getTemperature() {
             return Temperature;
         }
+
+        public String getOwnerId() {
+            return OwnerID;
+        }
+
+        public String getPackagePosition() {
+            return PackagePosition;
+        }
+
+        public String getTimestamp() {
+            return Timestamp;
+        }
     }
 
 
 
-    private void popUpEditText() {
+    private void popUpEditText()  {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Enter Your Password");
 
@@ -318,7 +411,7 @@ public class DetailsViewActivity extends AppCompatActivity  {
 
 
                 String password = input.getText().toString();
-                String KEY_NAME = "CHOOSE_YOUR_KEYNAME_FOR_STORAGE";
+                String KEY_NAME = "KYD";
 
                 AndroidKeystore c = null;
                 try {
@@ -365,6 +458,26 @@ public class DetailsViewActivity extends AppCompatActivity  {
                                 new Runnable() {
                                     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
                                     public void run() {
+                                        DetailsViewActivity d =new DetailsViewActivity();
+                                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                                            try {
+                                                d.HashData();
+                                            } catch (CertificateException e) {
+                                                e.printStackTrace();
+                                            } catch (NoSuchAlgorithmException e) {
+                                                e.printStackTrace();
+                                            } catch (KeyStoreException e) {
+                                                e.printStackTrace();
+                                            } catch (IOException e) {
+                                                e.printStackTrace();
+                                            } catch (NoSuchProviderException e) {
+                                                e.printStackTrace();
+                                            } catch (InvalidAlgorithmParameterException e) {
+                                                e.printStackTrace();
+                                            }
+
+                                        }
+
                                         startActivity(new Intent(DetailsViewActivity.this, SigningActivity.class));
                                             finish();
                                     }
@@ -392,22 +505,75 @@ public class DetailsViewActivity extends AppCompatActivity  {
 
     }
 
-    public void HashData(){
-        signedTemparature = drugPackage.getTemperature();
-        signedExpireDate = drugPackage.getExpireDate();
-        signedManufactureDate = drugPackage.getManufacturedDate();
-        signedMnufacturer = drugPackage.getManufacturer();
-        signedOwner = drugPackage.getOwner();
-        signedStellarHash = drugPackage.getStellarHash();
-        signedStatus = drugPackage.getStatus();
-        signedQuantity = drugPackage.getQuantity();
-        signedProductName = drugPackage.getProductName();
-        signedPackageID = drugPackage.getPackageID();
-        signedProductID = drugPackage.getProductID();
-        timestamp = null;
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    public void HashData() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, InvalidAlgorithmParameterException, IOException {
 
+        String KEY_NAME = "KYD";
+        AndroidKeystore c = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            c = new AndroidKeystore(KEY_NAME);
+        }
+        PvtKey = c.get("PvtKey");
+        PubKey = c.get("PubKey");
 
+        System.out.println(PvtKey);
+        System.out.println(PubKey);
 
+        DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
+        String date = df.format(Calendar.getInstance().getTime());
+        System.out.println("---------------------------------------------");
+        signedExpireDate = iexpireDate;
+        signedManufactureDate = imanufactureDate;
+        signedMnufacturer = imanufacturer;
+        signedOwner = iowner;
+        signedStellarHash = istellarHash;
+        signedStatus = istatus;
+        signedQuantity = iquantity;
+        signedProductName = iproducName;
+        signedPackageID = ipackageID;
+        signedProductID = iproductId;
+        signedPackagePosition = ipackagePosition;
+        signedOwnerid = PubKey;
+        timestamp = date;
+
+        String jsonString = null;
+        try {
+            jsonString = new JSONObject()
+                    .put("PackageID", signedPackageID)
+                    .put("ProductID", signedProductID)
+                    .put("ProductName", signedProductName)
+                    .put("Owner", signedOwner)
+                    .put("Manufacturer", signedMnufacturer)
+                    .put("ManufactureDate", signedManufactureDate)
+                    .put("Status", signedStatus)
+                    .put("PackagePosition", signedStatus)
+                    .put("OwnerId", signedOwnerid)
+                    .put("Status", signedStatus)
+                    .put("Temperature", signedTemparature)
+                    .put("Timestamp", timestamp)
+                    .put("Quantity", signedQuantity).toString();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        System.out.println(jsonString);
+
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] hash = digest.digest(jsonString.getBytes(StandardCharsets.UTF_8));
+        String hex = bytesToHex(hash);
+        String txnHash = null;
+
+        try {
+            System.out.println("-------------------------------------------------------------------------------------------");
+//            stellar.CheckBalance();
+            stellar.doManageData("kyd", hex);
+            txnHash = stellar.getTransactionhashStellar();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        changeOwner(signedPackageID, signedOwner, signedOwnerid, signedPackagePosition, timestamp, txnHash);
     }
 
 
@@ -445,4 +611,81 @@ public class DetailsViewActivity extends AppCompatActivity  {
         }
     }
 
+
+    private static String bytesToHex(byte[] hashInBytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : hashInBytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+
+    }
+
+
+    public void changeOwner(String PackageID, final String NewOwner, final String NewOwnerId, final String PackagePosition, final String Timestamp, final String StellarHash){
+        int myNum = 0;
+
+        try {
+            myNum = Integer.parseInt(PackagePosition);
+        } catch(NumberFormatException nfe) {
+            System.out.println("Could not parse " + nfe);
+        }
+        int position= myNum + 1;
+        String tag = "json_obj_req";
+        final String NewPackagePosition = String.valueOf(position);
+
+        String requestUrl = "http://35.223.22.68:8080/api/changeowner/" + PackageID;
+
+        StringRequest strReq = new StringRequest(Request.Method.PUT,
+                requestUrl, new Response.Listener<String>() {
+
+            @Override
+            public void onResponse(String response) {
+                Log.d(TAG, response.toString());
+
+            }
+        }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                VolleyLog.d(TAG, "Error: " + error.getMessage());
+            }
+        }) {
+
+            @Override
+            public String getBodyContentType() {
+//                Map<String, String> pars = new HashMap<String, String>();
+//                pars.put("Content-Type", "application/x-www-form-urlencoded");
+                //return pars;
+                return "application/x-www-form-urlencoded";
+            }
+
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("owner", NewOwner);
+                params.put("ownerid", NewOwnerId);
+                params.put("packgepositin", NewPackagePosition);
+                params.put("timestamp", Timestamp);
+                params.put("stellrhash", StellarHash);
+
+                return params;
+            }
+        };
+// Adding request to request queue
+        MyApplication.getInstance().addToRequestQueue(strReq, tag);
+    }
+
+    public void verify(){
+    Intent i = new Intent(DetailsViewActivity.this, VerificationActivity.class);
+    i.putExtra("stellerash", istellarHash);
+    startActivity(i);
+}
+
+
+public void showHistory(){
+    Intent i = new Intent(DetailsViewActivity.this, HistoryActivity.class);
+    i.putExtra("pkgid", ipackageID);
+    startActivity(i);
+}
 }

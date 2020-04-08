@@ -22,28 +22,13 @@ public class SplashActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
 
-        Stellar stellar = new Stellar();
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
 
-        StrictMode.setThreadPolicy(policy);
-        try {
-            System.out.println("-------------------------------------------------------------------------------------------");
-//            stellar.CreateAccount();
-//            stellar.CheckBalance();
-            stellar.doManageData("android", "android 123");
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
         new Handler().postDelayed(new Runnable() {
-
-
             @Override
             public void run() {
                 // This method will be executed once the timer is over
-                Intent i = new Intent(SplashActivity.this, LoginActivity.class);
+                Intent i = new Intent(SplashActivity.this, HistoryActivity.class);
                 startActivity(i);
                 finish();
             }

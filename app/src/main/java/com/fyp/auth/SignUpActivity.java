@@ -23,8 +23,8 @@ import com.fyp.kyd.R;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+import com.fyp.kyd.SplashActivity;
 import com.fyp.rsa.RSA;
-//import com.github.tntkhang.keystore_secure.KeystoreSecure;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -35,8 +35,6 @@ import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import static shadow.com.google.common.base.Strings.isNullOrEmpty;
 
 public class SignUpActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
 
@@ -174,10 +172,10 @@ public class SignUpActivity extends AppCompatActivity implements AdapterView.OnI
     public void signup() {
         Log.d(TAG, "Signup");
 
-//        if (!validate()) {
-//            onSignupFailed();
-//            return;
-//        }
+        if (!validate()) {
+            onSignupFailed();
+            return;
+        }
 
         _signupButton.setEnabled(false);
 
@@ -191,9 +189,6 @@ public class SignUpActivity extends AppCompatActivity implements AdapterView.OnI
         String email = _emailText.getText().toString();
         String mobile = _mobileText.getText().toString();
         String password = _passwordText.getText().toString();
-        String reEnterPassword = _reEnterPasswordText.getText().toString();
-        String userRole = role;
-        String publicKeyy = publicKey;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             setKeys(password);
@@ -206,8 +201,6 @@ public class SignUpActivity extends AppCompatActivity implements AdapterView.OnI
         new Handler().postDelayed(
                 new Runnable() {
                     public void run() {
-                        // On complete call either onSignupSuccess or onSignupFailed
-                        // depending on success
                         onSignupSuccess();
                         // onSignupFailed();
                         progressDialog.dismiss();
@@ -219,11 +212,12 @@ public class SignUpActivity extends AppCompatActivity implements AdapterView.OnI
     public void onSignupSuccess() {
         _signupButton.setEnabled(true);
         setResult(RESULT_OK, null);
-        finish();
+        Intent i = new Intent(SignUpActivity.this, LoginActivity.class);
+        startActivity(i);finish();
     }
 
     public void onSignupFailed() {
-        Toast.makeText(getBaseContext(), "Login failed", Toast.LENGTH_LONG).show();
+        Toast.makeText(getBaseContext(), "SignUp failed", Toast.LENGTH_LONG).show();
 
         _signupButton.setEnabled(true);
     }
@@ -287,18 +281,20 @@ public class SignUpActivity extends AppCompatActivity implements AdapterView.OnI
     public void setKeys(String signupPassword){
 
         try {
+            String KEY_NAME = "KYD";
+            AndroidKeystore c = new AndroidKeystore(KEY_NAME);
+
             Map<String, Object> keyMap = RSA.initKey();
             publicKey = RSA.getPublicKey(keyMap);
             privateKey = RSA.getPrivateKey(keyMap);
             System.out.println(privateKey);
-
+            c.save("PvtKey", privateKey);
+            c.save("PubKey", publicKey);
 
             String secretKey = signupPassword; //getting signup password of the user
             String privateKeyString = privateKey; //get user rsa private key genarated
             String encryptedPrivateKeyString = PassEncryption.encrypt(privateKeyString, secretKey) ;//encrypt the private key using user password
-            String KEY_NAME = "CHOOSE_YOUR_KEYNAME_FOR_STORAGE";
 
-            AndroidKeystore c = new AndroidKeystore(KEY_NAME);
 
             System.out.println(encryptedPrivateKeyString);
             String encrypted = c.encrypt(encryptedPrivateKeyString); // returns base 64 data: 'BASE64_DATA,BASE64_IV'
