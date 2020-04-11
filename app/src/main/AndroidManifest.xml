@@ -17,8 +17,6 @@
         <activity
             android:name=".SigningActivity"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name="com.fyp.rsa.EncryptionActivity" />
-        <activity android:name="com.fyp.rsa.Main2Activity" />
         <activity android:name="com.fyp.rsa.SignatureActivity" />
         <activity
             android:name="com.fyp.auth.SignUpActivity"

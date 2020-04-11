@@ -10,12 +10,6 @@ import android.widget.Toast;
 //import com.fyp.auth.LoginActivity;
 
 import com.fyp.auth.LoginActivity;
-import com.fyp.rsa.Main2Activity;
-
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
-import butterknife.internal.Utils;
 
 import static com.fyp.Utils.getSha256Hash;
 
@@ -41,9 +35,9 @@ public class MainActivity extends AppCompatActivity {
         firebase.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent(MainActivity.this, Main2Activity.class);
-                startActivity(i);
-                finish();
+//                Intent i = new Intent(MainActivity.this, Main2Activity.class);
+//                startActivity(i);
+//                finish();
             }
         });
 

@@ -61,16 +61,16 @@ public class VerificationActivity extends AppCompatActivity {
         progressDialog.setMessage("Verifying Details...");
         progressDialog.show();
 
-
+        checkHash(hash);
         new Handler().postDelayed(new Runnable() {
 
 
             @Override
             public void run() {
-                checkHash(hash);
+
                 progressDialog.dismiss();
             }
-        }, 3000);
+        }, 4200);
     }
 
 

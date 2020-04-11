@@ -42,6 +42,7 @@
                     <ImageView
                         android:id="@+id/h11"
                         android:layout_width="40dp"
+                        android:layout_gravity="center"
                         android:layout_height="40dp"
                         android:src="@drawable/i3" />
 
@@ -74,6 +75,7 @@
                     android:layerType="software"
                     custom:color="#ff0000"
                     custom:dashGap="2dp"
+                    android:layout_gravity="center"
                     custom:dashLength="6dp"
                     custom:dashThickness="2dp"
                     custom:orientation="vertical" />
@@ -88,6 +90,7 @@
                         android:id="@+id/h22"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
+                        android:layout_gravity="center"
                         android:src="@drawable/i3" />
 
                     <RelativeLayout
@@ -122,6 +125,7 @@
                     android:layout_height="60dp"
                     android:layerType="software"
                     custom:color="#ff0000"
+                    android:layout_gravity="center"
                     custom:dashGap="2dp"
                     custom:dashLength="6dp"
                     custom:dashThickness="2dp"
@@ -137,6 +141,7 @@
                         android:id="@+id/h33"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
+                        android:layout_gravity="center"
                         android:src="@drawable/i3" />
 
                     <RelativeLayout
@@ -167,6 +172,7 @@
                     android:layerType="software"
                     custom:color="#ff0000"
                     custom:dashGap="2dp"
+                    android:layout_gravity="center"
                     custom:dashLength="6dp"
                     custom:dashThickness="2dp"
                     custom:orientation="vertical" />
@@ -181,6 +187,7 @@
                         android:id="@+id/h44"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
+                        android:layout_gravity="center"
                         android:src="@drawable/i3" />
 
                     <RelativeLayout

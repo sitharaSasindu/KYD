@@ -9,34 +9,25 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
-import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.fyp.qr.MyApplication;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.List;
-
-//import org.json.JSONArray;
-//import org.json.JSONException;
-//import org.json.JSONObject;
 
 public class HistoryActivity extends AppCompatActivity {
 
@@ -62,6 +53,112 @@ public class HistoryActivity extends AppCompatActivity {
     private MyRecyclerViewAdapter mAdapter;
     private MyRecyclerViewAdapter mAdapter2;
     private MyRecyclerViewAdapter mAdapter3;
+    private ImageView imgPoster, imgPoster2, imgPoster3, imgPoster4;
+    private static String stellarHash1;
+
+    public static String getStellarHash1() {
+        return stellarHash1;
+    }
+
+    public static String getStellarHash2() {
+        return stellarHash2;
+    }
+
+    public static String getStellarHash3() {
+        return stellarHash3;
+    }
+
+    public static String getStellarHash4() {
+        return stellarHash4;
+    }
+
+    public static void setStellarHash1(String stellarHash1) {
+        HistoryActivity.stellarHash1 = stellarHash1;
+    }
+
+    public static void setStellarHash2(String stellarHash2) {
+        HistoryActivity.stellarHash2 = stellarHash2;
+    }
+
+    public static void setStellarHash3(String stellarHash3) {
+        HistoryActivity.stellarHash3 = stellarHash3;
+    }
+
+    public static void setStellarHash4(String stellarHash4) {
+        HistoryActivity.stellarHash4 = stellarHash4;
+    }
+
+    private static String stellarHash2;
+    private static String stellarHash3;
+    private static String stellarHash4;
+
+    public static void setA(int a) {
+        HistoryActivity.a = a;
+    }
+
+    public static void setB(int b) {
+        HistoryActivity.b = b;
+    }
+
+    public static void setC(int c) {
+        HistoryActivity.c = c;
+    }
+
+    public static void setD(int d) {
+        HistoryActivity.d = d;
+    }
+
+    public static int getA() {
+        return a;
+    }
+
+    public static int getB() {
+        return b;
+    }
+
+    public static int getC() {
+        return c;
+    }
+
+    public static int getD() {
+        return d;
+    }
+
+    public static int a, b, c, d = 0;
+
+    public static Boolean getCheckA() {
+        return checkA;
+    }
+
+    public static Boolean getCheckB() {
+        return checkB;
+    }
+
+    public static Boolean getCheckC() {
+        return checkC;
+    }
+
+    public static Boolean getCheckD() {
+        return checkD;
+    }
+
+    public static void setCheckA(Boolean checkA) {
+        HistoryActivity.checkA = checkA;
+    }
+
+    public static void setCheckB(Boolean checkB) {
+        HistoryActivity.checkB = checkB;
+    }
+
+    public static void setCheckC(Boolean checkC) {
+        HistoryActivity.checkC = checkC;
+    }
+
+    public static void setCheckD(Boolean checkD) {
+        HistoryActivity.checkD = checkD;
+    }
+
+    public static Boolean checkA, checkB, checkC, checkD= false;
     private MyRecyclerViewAdapter mAdapter4;
 
     @Override
@@ -83,7 +180,10 @@ public class HistoryActivity extends AppCompatActivity {
         h4 = findViewById(R.id.h4);
         h44 = findViewById(R.id.h44);
 //        h4444 = findViewById(R.id.h4444);
-
+        imgPoster = findViewById(R.id.h11);
+        imgPoster2 = findViewById(R.id.h22);
+        imgPoster3 = findViewById(R.id.h33);
+        imgPoster4 = findViewById(R.id.h44);
 
         verificationView.setVisibility(View.VISIBLE);
         progressBar.setVisibility(View.GONE);
@@ -120,16 +220,12 @@ public class HistoryActivity extends AppCompatActivity {
         recyclerView4.setItemAnimator(new DefaultItemAnimator());
         recyclerView4.setAdapter(mAdapter4);
 
+        setCheckA(false);
+        setCheckB(false);
+        setCheckC(false);
+        setCheckD(false);
 
-
-//        h3.setVisibility(View.GONE);
-//        h3333.setVisibility(View.GONE);
-//        h1.setVisibility(View.GONE);
-//        h1111.setVisibility(View.GONE);
-//        h2.setVisibility(View.GONE);
-//        h2222.setVisibility(View.GONE);
-//        h4.setVisibility(View.GONE);
-        checkHistory("PKG1");
+        checkHistory(pkgid);
     }
 
     public void verifyDetails() {
@@ -140,25 +236,52 @@ public class HistoryActivity extends AppCompatActivity {
         progressDialog.setMessage("Verifying Details...");
         progressDialog.show();
 
-
+        showchecked();
         new Handler().postDelayed(new Runnable() {
 
 
             @Override
             public void run() {
-                if (reqresponse) {
 
-                } else {
-
-                }
                 progressDialog.dismiss();
             }
         }, 3000);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.buton2, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.historycheck) {
+            verifyDetails();
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    public void showchecked() {
+            if (getA() == 1) {
+                checkHash(stellarHash1, 1);
+            }
+            if (getB() == 1) {
+                checkHash(stellarHash2, 2);
+            }
+            if (getC() == 1) {
+                checkHash(stellarHash3, 3);
+            }
+            if (getD() == 1) {
+                checkHash(stellarHash4,4);
+            }
+    }
+
     public void checkHash(String hash, final int id) {
         reqresponse = false;
-// Tag used to cancel the request
+
         String tag_string_req = "string_req";
 
         String url = "https://horizon-testnet.stellar.org/transactions/" + hash + "/operations";
@@ -168,38 +291,61 @@ public class HistoryActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(String response) {
-                if(id==1){
-
-                }else if(id==2){
-
-                }else if(id==3){
-
-                }else if(id==4){
-
+                if (id == 1) {
+                    imgPoster.setBackgroundResource(0);
+                    imgPoster.setImageDrawable(null);
+                    imgPoster.setBackgroundResource(R.drawable.sw);
+                } else if (id == 2) {
+                    imgPoster2.setBackgroundResource(0);
+                    imgPoster2.setImageDrawable(null);
+                    imgPoster2.setBackgroundResource(R.drawable.sw);
+                } else if (id == 3) {
+                    imgPoster3.setBackgroundResource(0);
+                    imgPoster3.setImageDrawable(null);
+                    imgPoster3.setBackgroundResource(R.drawable.sw);
+                } else if (id == 4) {
+                    imgPoster4.setBackgroundResource(0);
+                    imgPoster4.setImageDrawable(null);
+                    imgPoster4.setBackgroundResource(R.drawable.sw);
                 }
-                System.out.println(response);
-//                iconsuccess.setBackgroundResource(R.drawable.i6);
-                reqresponse = true;
+
             }
         }, new Response.ErrorListener() {
 
             @Override
             public void onErrorResponse(VolleyError error) {
                 VolleyLog.d("Error: " + error.getMessage());
-                reqresponse = false;
-//                iconsuccess.setBackgroundResource(R.drawable.i8);
+
+                if (id == 1) {
+                    imgPoster.setBackgroundResource(0);
+                    imgPoster.setImageDrawable(null);
+                    imgPoster.setBackgroundResource(R.drawable.i8);
+                } else if (id == 2) {
+                    imgPoster2.setBackgroundResource(0);
+                    imgPoster2.setImageDrawable(null);
+                    imgPoster2.setBackgroundResource(R.drawable.i8);
+                } else if (id == 3) {
+                    imgPoster3.setBackgroundResource(0);
+                    imgPoster3.setImageDrawable(null);
+                    imgPoster3.setBackgroundResource(R.drawable.i8);
+                } else if (id == 4) {
+                    imgPoster4.setBackgroundResource(0);
+                    imgPoster4.setImageDrawable(null);
+                    imgPoster4.setBackgroundResource(R.drawable.i8);
+                }
             }
         });
 
-// Adding request to request queue
+
         MyApplication.getInstance().addToRequestQueue(strReq, tag_string_req);
+
     }
 
 
     public void checkHistory(String PackageID) {
         String tag_string_req = "string_req";
 
-        String url = "http://35.223.22.68:8080/api/query/history/" + PackageID;
+        String url = "http://35.226.109.177:8080/api/query/history/" + PackageID;
 
         JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.GET,
                 url, null,
@@ -261,94 +407,95 @@ public class HistoryActivity extends AppCompatActivity {
             String owner = student.getString("Owner");
             String stellarhash = student.getString("StellarHash");
 
+            if (i == 0) {
+                MyListData movie = new MyListData(productid, "ProductID");
+                movieList.add(movie);
+                movie = new MyListData(productname, "ProductName");
+                movieList.add(movie);
+                movie = new MyListData(packageid, "PackageID");
+                movieList.add(movie);
+                movie = new MyListData(expiredate, "ExpireDate");
+                movieList.add(movie);
+                movie = new MyListData(quantity, "Quantity");
+                movieList.add(movie);
+                movie = new MyListData(manudate, "ManufacturedDate");
+                movieList.add(movie);
+                movie = new MyListData(timestamp, "Timestamp");
+                movieList.add(movie);
+                movie = new MyListData(manufacturer, "Manufacturer");
+                movieList.add(movie);
+                movie = new MyListData(stellarhash, "StellarHash");
+                movieList.add(movie);
+                movie = new MyListData(temparature, "Temparature");
+                movieList.add(movie);
+                movie = new MyListData(owner, "Owner");
+                movieList.add(movie);
+                movie = new MyListData(ownerid, "OwnerID");
+                movieList.add(movie);
+
+                setA(1);
+                setStellarHash1(stellarhash);
+            }
             if (i == 1) {
                 MyListData movie = new MyListData(productid, "ProductID");
-                movieList.add(movie);
+                movieList2.add(movie);
                 movie = new MyListData(productname, "ProductName");
-                movieList.add(movie);
+                movieList2.add(movie);
                 movie = new MyListData(packageid, "PackageID");
-                movieList.add(movie);
+                movieList2.add(movie);
                 movie = new MyListData(expiredate, "ExpireDate");
-                movieList.add(movie);
+                movieList2.add(movie);
                 movie = new MyListData(quantity, "Quantity");
-                movieList.add(movie);
+                movieList2.add(movie);
                 movie = new MyListData(manudate, "ManufacturedDate");
-                movieList.add(movie);
+                movieList2.add(movie);
                 movie = new MyListData(timestamp, "Timestamp");
-                movieList.add(movie);
+                movieList2.add(movie);
                 movie = new MyListData(manufacturer, "Manufacturer");
-                movieList.add(movie);
+                movieList2.add(movie);
                 movie = new MyListData(stellarhash, "StellarHash");
-                movieList.add(movie);
+                movieList2.add(movie);
                 movie = new MyListData(temparature, "Temparature");
-                movieList.add(movie);
+                movieList2.add(movie);
                 movie = new MyListData(owner, "Owner");
-                movieList.add(movie);
+                movieList2.add(movie);
                 movie = new MyListData(ownerid, "OwnerID");
-                movieList.add(movie);
+                movieList2.add(movie);
 
-                checkHash(stellarhash, 1);
+                setB(1);
+             setStellarHash2(stellarhash);
             }
             if (i == 2) {
-                MyListData movie = new MyListData(productid, "ProductID");
-                movieList2.add(movie);
-                movie = new MyListData(productname, "ProductName");
-                movieList2.add(movie);
-                movie = new MyListData(packageid, "PackageID");
-                movieList2.add(movie);
-                movie = new MyListData(expiredate, "ExpireDate");
-                movieList2.add(movie);
-                movie = new MyListData(quantity, "Quantity");
-                movieList2.add(movie);
-                movie = new MyListData(manudate, "ManufacturedDate");
-                movieList2.add(movie);
-                movie = new MyListData(timestamp, "Timestamp");
-                movieList2.add(movie);
-                movie = new MyListData(manufacturer, "Manufacturer");
-                movieList2.add(movie);
-                movie = new MyListData(stellarhash, "StellarHash");
-                movieList2.add(movie);
-                movie = new MyListData(temparature, "Temparature");
-                movieList2.add(movie);
-                movie = new MyListData(owner, "Owner");
-                movieList2.add(movie);
-                movie = new MyListData(ownerid, "OwnerID");
-                movieList2.add(movie);
 
-//                MyRecyclerViewAdapter.setBind(true);
-                checkHash(stellarhash, 2);
+                MyListData movie = new MyListData(productid, "ProductID");
+                movieList3.add(movie);
+                movie = new MyListData(productname, "ProductName");
+                movieList3.add(movie);
+                movie = new MyListData(packageid, "PackageID");
+                movieList3.add(movie);
+                movie = new MyListData(expiredate, "ExpireDate");
+                movieList3.add(movie);
+                movie = new MyListData(quantity, "Quantity");
+                movieList3.add(movie);
+                movie = new MyListData(manudate, "ManufacturedDate");
+                movieList3.add(movie);
+                movie = new MyListData(timestamp, "Timestamp");
+                movieList3.add(movie);
+                movie = new MyListData(manufacturer, "Manufacturer");
+                movieList3.add(movie);
+                movie = new MyListData(stellarhash, "StellarHash");
+                movieList3.add(movie);
+                movie = new MyListData(temparature, "Temparature");
+                movieList3.add(movie);
+                movie = new MyListData(owner, "Owner");
+                movieList3.add(movie);
+                movie = new MyListData(ownerid, "OwnerID");
+                movieList3.add(movie);
+
+                setC(1);
+setStellarHash3(stellarhash);
             }
             if (i == 3) {
-
-                MyListData movie = new MyListData(productid, "ProductID");
-                movieList3.add(movie);
-                movie = new MyListData(productname, "ProductName");
-                movieList3.add(movie);
-                movie = new MyListData(packageid, "PackageID");
-                movieList3.add(movie);
-                movie = new MyListData(expiredate, "ExpireDate");
-                movieList3.add(movie);
-                movie = new MyListData(quantity, "Quantity");
-                movieList3.add(movie);
-                movie = new MyListData(manudate, "ManufacturedDate");
-                movieList3.add(movie);
-                movie = new MyListData(timestamp, "Timestamp");
-                movieList3.add(movie);
-                movie = new MyListData(manufacturer, "Manufacturer");
-                movieList3.add(movie);
-                movie = new MyListData(stellarhash, "StellarHash");
-                movieList3.add(movie);
-                movie = new MyListData(temparature, "Temparature");
-                movieList3.add(movie);
-                movie = new MyListData(owner, "Owner");
-                movieList3.add(movie);
-                movie = new MyListData(ownerid, "OwnerID");
-                movieList3.add(movie);
-
-
-                checkHash(stellarhash,3);
-            }
-            if (i == 4) {
                 MyListData movie = new MyListData(productid, "ProductID");
                 movieList4.add(movie);
                 movie = new MyListData(productname, "ProductName");
@@ -374,7 +521,8 @@ public class HistoryActivity extends AppCompatActivity {
                 movie = new MyListData(ownerid, "OwnerID");
                 movieList4.add(movie);
 
-                checkHash(stellarhash,4);
+                setD(1);
+                setStellarHash4(stellarhash);
             }
         }
 
@@ -383,37 +531,39 @@ public class HistoryActivity extends AppCompatActivity {
         mAdapter2.notifyDataSetChanged();
         mAdapter4.notifyDataSetChanged();
 
-        if (students.length()==1){
+        if (students.length() == 1) {
             h3.setVisibility(View.GONE);
             h3333.setVisibility(View.GONE);
             h1.setVisibility(View.VISIBLE);
-            h1111.setVisibility(View.VISIBLE);
+            h1111.setVisibility(View.GONE);
             h2.setVisibility(View.GONE);
             h2222.setVisibility(View.GONE);
             h4.setVisibility(View.GONE);
-        }else   if (students.length()==2){
+        } else if (students.length() == 2) {
             h3.setVisibility(View.GONE);
             h3333.setVisibility(View.GONE);
             h1.setVisibility(View.VISIBLE);
             h1111.setVisibility(View.VISIBLE);
             h2.setVisibility(View.VISIBLE);
-            h2222.setVisibility(View.VISIBLE);
+            h2222.setVisibility(View.GONE);
             h4.setVisibility(View.GONE);
-        }else   if (students.length()==3){
-            h3.setVisibility(View.VISIBLE);
-            h3333.setVisibility(View.VISIBLE);
+        } else if (students.length() == 3) {
+
             h1.setVisibility(View.VISIBLE);
             h1111.setVisibility(View.VISIBLE);
             h2.setVisibility(View.VISIBLE);
             h2222.setVisibility(View.VISIBLE);
-            h4.setVisibility(View.GONE);
-        }else   if (students.length()==4){
             h3.setVisibility(View.VISIBLE);
-            h3333.setVisibility(View.VISIBLE);
+            h3333.setVisibility(View.GONE);
+            h4.setVisibility(View.GONE);
+        } else if (students.length() == 4) {
+
             h1.setVisibility(View.VISIBLE);
             h1111.setVisibility(View.VISIBLE);
             h2.setVisibility(View.VISIBLE);
             h2222.setVisibility(View.VISIBLE);
+            h3.setVisibility(View.VISIBLE);
+            h3333.setVisibility(View.VISIBLE);
             h4.setVisibility(View.VISIBLE);
         }
     }
