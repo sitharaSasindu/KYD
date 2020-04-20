@@ -345,7 +345,7 @@ public class HistoryActivity extends AppCompatActivity {
     public void checkHistory(String PackageID) {
         String tag_string_req = "string_req";
 
-        String url = "http://35.226.109.177:8080/api/query/history/" + PackageID;
+        String url = "http://34.69.253.149:8080/api/query/history/" + PackageID;
 
         JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.GET,
                 url, null,

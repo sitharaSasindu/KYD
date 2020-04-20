@@ -78,7 +78,7 @@ public class DetailsViewActivity extends AppCompatActivity  {
 
 //    Button verify =  findViewById(R.id.verify);
     // url to search barcode
-    private static final String URL = "http://35.226.109.177:8080/api/query/";
+    private static final String URL = "http://34.69.253.149:8080/api/query/";
 
     String signedPackageID, signedProductID, signedProductName, signedMnufacturer, signedManufactureDate, signedExpireDate, signedQuantity, signedOwner, timestamp, signedStellarHash, signedStatus, signedTemparature, signedOwnerid, signedPackagePosition;
     private TextView txtPackage, txtProduct, txtOwner, txtManufacturer, txtQty, txtManudate,txtExpire, txtError;
@@ -626,7 +626,7 @@ public class DetailsViewActivity extends AppCompatActivity  {
         String tag = "json_obj_req";
         final String NewPackagePosition = String.valueOf(position);
 
-        String requestUrl = "http://35.226.109.177:8080/api/changeowner/" + PackageID;
+        String requestUrl = "http://34.69.253.149:8080/api/changeowner/" + PackageID;
 
         StringRequest strReq = new StringRequest(Request.Method.PUT,
                 requestUrl, new Response.Listener<String>() {
