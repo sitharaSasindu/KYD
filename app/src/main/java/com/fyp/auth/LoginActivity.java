@@ -1,8 +1,11 @@
 package com.fyp.auth;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,21 +18,24 @@ import android.widget.Toast;
 
 import com.fyp.kyd.QRActivity;
 import com.fyp.kyd.R;
-//import com.github.tntkhang.keystore_secure.KeystoreSecure;
-
+import com.fyp.qr.DetailsViewActivity;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseError;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
-import java.util.Collections;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -43,7 +49,9 @@ public class LoginActivity extends AppCompatActivity {
     private Encryption encryptor;
     private Decryption decryptor;
     private static final String KYD_ALIAS = "kydalias";
-
+    private DatabaseReference mFirebaseDatabase;
+    private FirebaseDatabase mFirebaseInstance;
+    private FirebaseAuth auth;
     private java.security.KeyStore keyStore;
     @BindView(R.id.input_email)
     EditText _emailText;
@@ -63,29 +71,38 @@ public class LoginActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         AndroidKeystore.init(getApplicationContext());
+        auth = FirebaseAuth.getInstance();
+        mFirebaseInstance = FirebaseDatabase.getInstance();
+        mFirebaseDatabase = mFirebaseInstance.getReference("Users");
 
         _loginButton.setOnClickListener(new View.OnClickListener() {
 
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onClick(View v) {
-                try {
+                if(isNetworkConnected()){
                     try {
-                        login();
-                    } catch (NoSuchProviderException e) {
+                        try {
+                            login();
+                        } catch (NoSuchProviderException e) {
+                            e.printStackTrace();
+                        } catch (InvalidAlgorithmParameterException e) {
+                            e.printStackTrace();
+                        }
+                    } catch (CertificateException e) {
                         e.printStackTrace();
-                    } catch (InvalidAlgorithmParameterException e) {
+                    } catch (NoSuchAlgorithmException e) {
+                        e.printStackTrace();
+                    } catch (KeyStoreException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
-                } catch (CertificateException e) {
-                    e.printStackTrace();
-                } catch (NoSuchAlgorithmException e) {
-                    e.printStackTrace();
-                } catch (KeyStoreException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } else {
+                    Toast.makeText(LoginActivity.this, "No Internet Connection",
+                            Toast.LENGTH_SHORT).show();
                 }
+
             }
         });
 
@@ -101,6 +118,14 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
     }
+
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnected();
+    }
+
+
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void login() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, NoSuchProviderException, InvalidAlgorithmParameterException {
@@ -120,55 +145,79 @@ public class LoginActivity extends AppCompatActivity {
         progressDialog.show();
 
         String email = _emailText.getText().toString();
-        String password = _passwordText.getText().toString();
+        final String password = _passwordText.getText().toString();
 
-        String KEY_NAME = "KYD";
+        auth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            Log.d(TAG, "signInWithEmail:success");
 
-        AndroidKeystore c = new AndroidKeystore(KEY_NAME);
+                            mFirebaseDatabase.child(FirebaseAuth.getInstance().getCurrentUser().getUid()).addListenerForSingleValueEvent(
+                                    new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(DataSnapshot dataSnapshot) {
+                                            // Get user value
+                                            UserDetails user = dataSnapshot.getValue(UserDetails.class);
+                                            String encryptedPrivateKey = user.getEncryptedPvtKey();
+                                            String encryptedPrivateKeyString = PassEncryption.decrypt(encryptedPrivateKey, password);
+                                            Boolean statusUser = Boolean.parseBoolean(user.getUserStatus());
+                                            Toast.makeText(LoginActivity.this, user.getUserStatus(),
+                                                    Toast.LENGTH_SHORT).show();
+                                            if (isNullOrEmpty(encryptedPrivateKeyString)) {
+                                                new android.os.Handler().postDelayed(
+                                                        new Runnable() {
+                                                            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+                                                            public void run() {
+                                                                progressDialog.dismiss();
+                                                                onLoginFailed();
 
-        c.get(KEY_NAME);
-        try {
-            String decrypted = c.decrypt(c.get(KEY_NAME));
-            String encryptedPrivateKeyString = PassEncryption.decrypt(decrypted, password);
+                                                                _loginButton.setEnabled(true);
+                                                            }
+                                                        }, 3000);
 
-            if(isNullOrEmpty(encryptedPrivateKeyString)){
-                new android.os.Handler().postDelayed(
-                        new Runnable() {
-                            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-                            public void run() {
-                                 onLoginFailed();
-                        progressDialog.dismiss();
-                            }
-                        }, 3000);
-            } else {
-                new android.os.Handler().postDelayed(
-                        new Runnable() {
-                            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-                            public void run() {
-                                onLoginSuccess();
-                        progressDialog.dismiss();
-                            }
-                        }, 3000);
-            }
-        } catch (NoSuchPaddingException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
-        } catch (BadPaddingException e) {
-            e.printStackTrace();
-        } catch (IllegalBlockSizeException e) {
-            e.printStackTrace();
-        }
+                                            } else {
+                                                if (statusUser) {
+                                                    new android.os.Handler().postDelayed(
+                                                            new Runnable() {
+                                                                @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+                                                                public void run() {
+                                                                    onLoginSuccess();
+                                                                    progressDialog.dismiss();
+                                                                    _loginButton.setEnabled(true);
+                                                                }
+                                                            }, 3000);
+                                                } else {
+                                                    Toast.makeText(LoginActivity.this, "User Profile is not activated",
+                                                            Toast.LENGTH_LONG).show();
+                                                    progressDialog.dismiss();
+                                                    _loginButton.setEnabled(true);
+                                                }
+                                            }
 
 
+                                            System.out.println(user.getEncryptedPvtKey());
 
+                                        }
+
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                                        }
+                                    });
+
+                        } else {
+                            // If sign in fails, display a message to the user.
+                            Log.w(TAG, "signInWithEmail:failure", task.getException());
+                             progressDialog.dismiss();
+                            onLoginFailed();
+                        }
+
+                    }
+                });
     }
 
-    public ArrayList<String> getAllAliasesInTheKeystore() throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
-        keyStore = java.security.KeyStore.getInstance("AndroidKeyStore");
-        keyStore.load(null);
-        return Collections.list(keyStore.aliases());
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -198,6 +247,7 @@ public class LoginActivity extends AppCompatActivity {
 //        finish();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void onLoginFailed() {
         Toast.makeText(getBaseContext(), "Login failed", Toast.LENGTH_LONG).show();
         _loginButton.setEnabled(true);

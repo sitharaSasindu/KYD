@@ -1,11 +1,14 @@
 package com.fyp.qr;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.ConnectivityManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -26,6 +29,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -37,6 +41,7 @@ import com.android.volley.toolbox.Volley;
 import com.fyp.auth.AndroidKeystore;
 import com.fyp.auth.LoginActivity;
 import com.fyp.auth.PassEncryption;
+import com.fyp.auth.UserDetails;
 import com.fyp.kyd.HistoryActivity;
 import com.fyp.kyd.R;
 import com.fyp.kyd.SigningActivity;
@@ -44,12 +49,20 @@ import com.fyp.kyd.SplashActivity;
 import com.fyp.kyd.VerificationActivity;
 import com.fyp.rsa.RSA;
 import com.fyp.stellar.Stellar;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
@@ -66,6 +79,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -73,20 +87,42 @@ import javax.crypto.NoSuchPaddingException;
 import static shadow.com.google.common.base.Strings.isNullOrEmpty;
 
 
-public class DetailsViewActivity extends AppCompatActivity  {
+public class DetailsViewActivity extends AppCompatActivity {
     private static final String TAG = DetailsViewActivity.class.getSimpleName();
 
-//    Button verify =  findViewById(R.id.verify);
+    //    Button verify =  findViewById(R.id.verify);
     // url to search barcode
     private static final String URL = "http://34.69.253.149:8080/api/query/";
 
-    String signedPackageID, signedProductID, signedProductName, signedMnufacturer, signedManufactureDate, signedExpireDate, signedQuantity, signedOwner, timestamp, signedStellarHash, signedStatus, signedTemparature, signedOwnerid, signedPackagePosition;
-    private TextView txtPackage, txtProduct, txtOwner, txtManufacturer, txtQty, txtManudate,txtExpire, txtError;
+   static String signedPackageID, signedProductID, signedProductName, signedMnufacturer, signedManufactureDate, signedExpireDate, signedQuantity, signedOwner, timestamp, signedStellarHash, signedStatus, signedTemparature, signedOwnerid, signedPackagePosition;
+    private TextView txtPackage, txtProduct, txtOwner, txtManufacturer, txtQty, txtManudate, txtExpire, txtError;
     private ImageView imgPoster;
     private Button btnAccept;
     private ProgressBar progressBar;
+
+    public String getSignedOwner() {
+        return signedOwner;
+    }
+
+    public String getSignedOwnerid() {
+        return signedOwnerid;
+    }
+
     private DetailsView detailsView;
+
+    public void setSignedOwner(String signedOwner) {
+        this.signedOwner = signedOwner;
+    }
+
+    public void setSignedOwnerid(String signedOwnerid) {
+        this.signedOwnerid = signedOwnerid;
+    }
+
     Package drugPackage = null;
+
+    private DatabaseReference mFirebaseDatabase;
+    private FirebaseDatabase mFirebaseInstance;
+    private FirebaseAuth auth;
 
     public static String PvtKey = null;
     public static String PubKey = null;
@@ -108,13 +144,17 @@ public class DetailsViewActivity extends AppCompatActivity  {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_details_view);
 
-         queue = Volley.newRequestQueue(this);
+        queue = Volley.newRequestQueue(this);
 
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 //        Toolbar toolbar = findViewById(R.id.toolbar);
 //        setSupportActionBar(toolbar);
 //        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        auth = FirebaseAuth.getInstance();
+        mFirebaseInstance = FirebaseDatabase.getInstance();
+        mFirebaseDatabase = mFirebaseInstance.getReference("Users");
 
         progressBarHolder = (FrameLayout) findViewById(R.id.progressBarHolder);
 
@@ -149,8 +189,22 @@ public class DetailsViewActivity extends AppCompatActivity  {
             }
         });
         // search the barcode
-        searchBarcode(barcode);
+        if(isNetworkConnected()){
+            searchBarcode(barcode);
+        } else {
+            Toast.makeText(DetailsViewActivity.this, "No Internet Connection",
+                    Toast.LENGTH_SHORT).show();
+        }
+
     }
+
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnected();
+    }
+
+
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void searchBarcode(String barcode) {
@@ -218,11 +272,11 @@ public class DetailsViewActivity extends AppCompatActivity  {
             System.out.println(replaced);
 
             // converting json to drugPackage object
-             drugPackage = new Gson().fromJson(replaced, Package.class);
+            drugPackage = new Gson().fromJson(replaced, Package.class);
             if (drugPackage != null) {
                 ipackageID = drugPackage.getPackageID();
                 iproducName = drugPackage.getProductName();
-                iproductId =  drugPackage.getProductID();
+                iproductId = drugPackage.getProductID();
                 iowner = drugPackage.getOwner2();
                 iexpireDate = drugPackage.getExpireDate();
                 imanufactureDate = drugPackage.getManufacturedDate();
@@ -290,7 +344,7 @@ public class DetailsViewActivity extends AppCompatActivity  {
         int id = item.getItemId();
 
         if (id == R.id.mybutton) {
-          verify();
+            verify();
         }
 
         if (id == R.id.history) {
@@ -341,8 +395,9 @@ public class DetailsViewActivity extends AppCompatActivity  {
         public String getOwner() {
             return "Current Owner: " + Owner;
         }
+
         public String getOwner2() {
-            return  Owner;
+            return Owner;
         }
 
         public String getStatus() {
@@ -379,8 +434,7 @@ public class DetailsViewActivity extends AppCompatActivity  {
     }
 
 
-
-    private void popUpEditText()  {
+    private void popUpEditText() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Enter Your Password");
 
@@ -400,90 +454,84 @@ public class DetailsViewActivity extends AppCompatActivity  {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 new MyTask().execute();
+                final String password = input.getText().toString();
 
+                FirebaseAuth.AuthStateListener authListener
+                        = new FirebaseAuth.AuthStateListener() {
+                    @Override
+                    public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                        FirebaseUser user = firebaseAuth.getCurrentUser();
+                        //If user is not signed in getCurrentUser method returns null
+                        if (user != null) {
+                            mFirebaseDatabase.child(FirebaseAuth.getInstance().getCurrentUser().getUid()).addListenerForSingleValueEvent(
+                                    new ValueEventListener() {
+                                        @RequiresApi(api = Build.VERSION_CODES.O)
+                                        @Override
+                                        public void onDataChange(DataSnapshot dataSnapshot) {
+                                            // Get user value
+                                            UserDetails user = dataSnapshot.getValue(UserDetails.class);
+                                            String encryptedPrivateKey = user.getEncryptedPvtKey();
 
-                String password = input.getText().toString();
-                String KEY_NAME = "KYD";
+                                            setSignedOwner(user.getName());
+                                            setSignedOwnerid(user.getPublicKey());
+                                            System.out.println(user.getName());
+                                            System.out.println(user.getPublicKey());
 
-                AndroidKeystore c = null;
-                try {
-                    c = new AndroidKeystore(KEY_NAME);
-                } catch (CertificateException e) {
-                    e.printStackTrace();
-                } catch (NoSuchAlgorithmException e) {
-                    e.printStackTrace();
-                } catch (KeyStoreException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (NoSuchProviderException e) {
-                    e.printStackTrace();
-                } catch (InvalidAlgorithmParameterException e) {
-                    e.printStackTrace();
-                }
+                                            String encryptedPrivateKeyString = PassEncryption.decrypt(encryptedPrivateKey, password);
+//                                Toast.makeText(LoginActivity.this, user.getUserStatus(),
+//                                        Toast.LENGTH_SHORT).show();
+                                            if (isNullOrEmpty(encryptedPrivateKeyString)) {
+                                                new android.os.Handler().postDelayed(
+                                                        new Runnable() {
+                                                            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+                                                            public void run() {
+                                                                Toast.makeText(getApplicationContext(), "Incorrect Password.", Toast.LENGTH_LONG).show();
+                                                            }
+                                                        }, 2000);
 
-                c.get(KEY_NAME);
-                try {
-                    String decrypted = null;
-                    try {
-                        decrypted = c.decrypt(c.get(KEY_NAME));
-                    } catch (NoSuchAlgorithmException e) {
-                        e.printStackTrace();
-                    } catch (InvalidAlgorithmParameterException e) {
-                        e.printStackTrace();
-                    }
-                    String encryptedPrivateKeyString = null;
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                        encryptedPrivateKeyString = PassEncryption.decrypt(decrypted, password);
-                    }
-
-                    if(isNullOrEmpty(encryptedPrivateKeyString)){
-                        new android.os.Handler().postDelayed(
-                                new Runnable() {
-                                    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-                                    public void run() {
-                                        Toast.makeText(getApplicationContext(), "Incorrect Password.", Toast.LENGTH_LONG).show();
-                                    }
-                                }, 2000);
-                    } else {
-                        new android.os.Handler().postDelayed(
-                                new Runnable() {
-                                    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-                                    public void run() {
-                                        DetailsViewActivity d =new DetailsViewActivity();
-                                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                                            try {
-                                                d.HashData();
-                                            } catch (CertificateException e) {
-                                                e.printStackTrace();
-                                            } catch (NoSuchAlgorithmException e) {
-                                                e.printStackTrace();
-                                            } catch (KeyStoreException e) {
-                                                e.printStackTrace();
-                                            } catch (IOException e) {
-                                                e.printStackTrace();
-                                            } catch (NoSuchProviderException e) {
-                                                e.printStackTrace();
-                                            } catch (InvalidAlgorithmParameterException e) {
-                                                e.printStackTrace();
+                                            } else {
+                                                new android.os.Handler().postDelayed(
+                                                        new Runnable() {
+                                                            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+                                                            public void run() {
+                                                                DetailsViewActivity d = new DetailsViewActivity();
+                                                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                                                                    try {
+                                                                        d.HashData();
+                                                                    } catch (CertificateException e) {
+                                                                        e.printStackTrace();
+                                                                    } catch (NoSuchAlgorithmException e) {
+                                                                        e.printStackTrace();
+                                                                    } catch (KeyStoreException e) {
+                                                                        e.printStackTrace();
+                                                                    } catch (IOException e) {
+                                                                        e.printStackTrace();
+                                                                    } catch (NoSuchProviderException e) {
+                                                                        e.printStackTrace();
+                                                                    } catch (InvalidAlgorithmParameterException e) {
+                                                                        e.printStackTrace();
+                                                                    }
+                                                                }
+                                                                startActivity(new Intent(DetailsViewActivity.this, SigningActivity.class));
+                                                                finish();
+                                                            }
+                                                        }, 3000);
                                             }
-
                                         }
 
-                                        startActivity(new Intent(DetailsViewActivity.this, SigningActivity.class));
-                                            finish();
-                                    }
-                                }, 3000);
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                                        }
+                                    });
+                        }
+                        else {
+//                            Toast.makeText(getApplicationContext(), "User not sined in.", Toast.LENGTH_LONG).show();
+                        }
+
                     }
-                } catch (NoSuchPaddingException e) {
-                    e.printStackTrace();
-                } catch (InvalidKeyException e) {
-                    e.printStackTrace();
-                } catch (BadPaddingException e) {
-                    e.printStackTrace();
-                } catch (IllegalBlockSizeException e) {
-                    e.printStackTrace();
-                }
+                };
+                auth.addAuthStateListener(authListener);
 
             }
         });
@@ -499,17 +547,42 @@ public class DetailsViewActivity extends AppCompatActivity  {
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void HashData() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, InvalidAlgorithmParameterException, IOException {
-
-        String KEY_NAME = "KYD";
-        AndroidKeystore c = null;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            c = new AndroidKeystore(KEY_NAME);
-        }
-        PvtKey = c.get("PvtKey");
-        PubKey = c.get("PubKey");
-
-        System.out.println(PvtKey);
-        System.out.println(PubKey);
+//
+//        FirebaseAuth.AuthStateListener authListener2
+//                = new FirebaseAuth.AuthStateListener() {
+//            @Override
+//            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+//                FirebaseUser user = firebaseAuth.getCurrentUser();
+//                //If user is not signed in getCurrentUser method returns null
+//                if (user != null) {
+//                    mFirebaseDatabase.child(FirebaseAuth.getInstance().getCurrentUser().getUid()).addListenerForSingleValueEvent(
+//                            new ValueEventListener() {
+//                                @RequiresApi(api = Build.VERSION_CODES.O)
+//                                @Override
+//                                public void onDataChange(DataSnapshot dataSnapshot) {
+//                                    // Get user value
+//                                    UserDetails user = dataSnapshot.getValue(UserDetails.class);
+//
+//
+//                                }
+//
+//                                @Override
+//                                public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//                                }
+//                            });
+//                }
+//                else {
+////                            Toast.makeText(getApplicationContext(), "User not sined in.", Toast.LENGTH_LONG).show();
+//                }
+//
+//            }
+//        };
+//        auth.addAuthStateListener(authListener2);
+        System.out.println("ggggggggggggg");
+        System.out.println(signedOwnerid);
+        System.out.println("ggggggggggggg");
+        System.out.println(getSignedOwnerid());
 
         DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
         String date = df.format(Calendar.getInstance().getTime());
@@ -517,7 +590,6 @@ public class DetailsViewActivity extends AppCompatActivity  {
         signedExpireDate = iexpireDate;
         signedManufactureDate = imanufactureDate;
         signedMnufacturer = imanufacturer;
-        signedOwner = iowner;
         signedStellarHash = istellarHash;
         signedStatus = istatus;
         signedQuantity = iquantity;
@@ -525,7 +597,6 @@ public class DetailsViewActivity extends AppCompatActivity  {
         signedPackageID = ipackageID;
         signedProductID = iproductId;
         signedPackagePosition = ipackagePosition;
-        signedOwnerid = PubKey;
         timestamp = date;
 
         String jsonString = null;
@@ -534,12 +605,12 @@ public class DetailsViewActivity extends AppCompatActivity  {
                     .put("PackageID", signedPackageID)
                     .put("ProductID", signedProductID)
                     .put("ProductName", signedProductName)
-                    .put("Owner", signedOwner)
+                    .put("Owner", getSignedOwner())
                     .put("Manufacturer", signedMnufacturer)
                     .put("ManufactureDate", signedManufactureDate)
                     .put("Status", signedStatus)
                     .put("PackagePosition", signedStatus)
-                    .put("OwnerId", signedOwnerid)
+                    .put("OwnerId", getSignedOwnerid())
                     .put("Status", signedStatus)
                     .put("Temperature", signedTemparature)
                     .put("Timestamp", timestamp)
@@ -614,15 +685,15 @@ public class DetailsViewActivity extends AppCompatActivity  {
     }
 
 
-    public void changeOwner(String PackageID, final String NewOwner, final String NewOwnerId, final String PackagePosition, final String Timestamp, final String StellarHash){
+    public void changeOwner(String PackageID, final String NewOwner, final String NewOwnerId, final String PackagePosition, final String Timestamp, final String StellarHash) {
         int myNum = 0;
 
         try {
             myNum = Integer.parseInt(PackagePosition);
-        } catch(NumberFormatException nfe) {
+        } catch (NumberFormatException nfe) {
             System.out.println("Could not parse " + nfe);
         }
-        int position= myNum + 1;
+        int position = myNum + 1;
         String tag = "json_obj_req";
         final String NewPackagePosition = String.valueOf(position);
 
@@ -668,16 +739,16 @@ public class DetailsViewActivity extends AppCompatActivity  {
         MyApplication.getInstance().addToRequestQueue(strReq, tag);
     }
 
-    public void verify(){
-    Intent i = new Intent(DetailsViewActivity.this, VerificationActivity.class);
-    i.putExtra("stellerash", istellarHash);
-    startActivity(i);
-}
+    public void verify() {
+        Intent i = new Intent(DetailsViewActivity.this, VerificationActivity.class);
+        i.putExtra("stellerash", istellarHash);
+        startActivity(i);
+    }
 
 
-public void showHistory(){
-    Intent i = new Intent(DetailsViewActivity.this, HistoryActivity.class);
-    i.putExtra("pkgid", ipackageID);
-    startActivity(i);
-}
+    public void showHistory() {
+        Intent i = new Intent(DetailsViewActivity.this, HistoryActivity.class);
+        i.putExtra("pkgid", ipackageID);
+        startActivity(i);
+    }
 }

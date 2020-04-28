@@ -1,9 +1,12 @@
 package com.fyp.auth;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -25,8 +28,18 @@ import butterknife.ButterKnife;
 
 import com.fyp.kyd.SplashActivity;
 import com.fyp.rsa.RSA;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
 import java.io.IOException;
 import java.security.KeyStoreException;
@@ -46,12 +59,14 @@ public class SignUpActivity extends AppCompatActivity implements AdapterView.OnI
     private static String privateKey = "";
 
     private static final String TAG = "SignupActivity";
-    private DatabaseReference mFirebaseDatabase;
-    private FirebaseDatabase mFirebaseInstance;
-
+    private DatabaseReference mFirebaseDatabase=null;
+    private FirebaseDatabase mFirebaseInstance=null;
+    public static String encrypted = null;
     private String userId;
+    private static String uuidd;
     public static String role = null;
-
+public String encryptedPrivateKey;
+public static String newuserStatus="false";
     @BindView(R.id.input_name)
     EditText _nameText;
     @BindView(R.id.input_email) EditText _emailText;
@@ -68,6 +83,11 @@ public class SignUpActivity extends AppCompatActivity implements AdapterView.OnI
 
     private static final String STORE_KEY_1 = "STORE_KEY_1";
 
+    private static FirebaseUser currentUser;
+    private FirebaseDatabase database;
+    private DatabaseReference dbRef;
+    private EditText userText;
+    private FirebaseAuth auth = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -76,6 +96,7 @@ public class SignUpActivity extends AppCompatActivity implements AdapterView.OnI
         ButterKnife.bind(this);
 
         AndroidKeystore.init(getApplicationContext());
+        auth = FirebaseAuth.getInstance();
 
         encryptor = new Encryption();
 
@@ -122,90 +143,84 @@ public class SignUpActivity extends AppCompatActivity implements AdapterView.OnI
             }
         });
 
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-//        DatabaseReference myRef = database.getReference("message");
-
-//        myRef.setValue("Hello, World!");
-
-        mFirebaseInstance = FirebaseDatabase.getInstance();
-
-        // get reference to 'users' node
-        mFirebaseDatabase = mFirebaseInstance.getReference("Users");
-
-        // store app title to 'app_title' node
-//        mFirebaseInstance.getReference("app_title").setValue("Realtime Database");
-//
-//        // app_title change listener
-//        mFirebaseInstance.getReference("app_title").addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                Log.e(TAG, "App title updated");
-//
-//                String appTitle = dataSnapshot.getValue(String.class);
-//
-//                // update toolbar title
-//                getSupportActionBar().setTitle(appTitle);
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError error) {
-//                // Failed to read value
-//                Log.e(TAG, "Failed to read app title value.", error.toException());
-//            }
-//        });
-    }
-
-    private void createUser(String name, String email, String mobile,String role, String publicKey) {
-        // TODO
-        // In real apps this userId should be fetched
-        // by implementing firebase auth
-        if (TextUtils.isEmpty(userId)) {
-            userId = mFirebaseDatabase.push().getKey();
-        }
-
-        UserDetails user = new UserDetails(name, email, mobile, role, publicKey);
-
-        mFirebaseDatabase.child(userId).setValue(user);
 
     }
+
+    private void createUser(final String name, final String email, final String mobile, final String role, final String publicKey, final String encryptedPrivateKey, final String password) {
+
+        auth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+
+//                        System.out.println(auth.getCurrentUser().getUid());
+                        if (task.isSuccessful()) {
+                            Log.d(TAG, "createUserWithEmail:success");
+                            UserDetails user = new UserDetails(name, email, mobile, role, publicKey, encryptedPrivateKey, newuserStatus);
+
+                            mFirebaseDatabase.child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(user);
+                        } else {
+                            // If sign in fails, display a message to the user.
+                            Log.w(TAG, "createUserWithEmail:failure", task.getException());
+                            Toast.makeText(SignUpActivity.this, "Authentication failed.",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+
+                        // ...
+                    }
+                });
+
+    }
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnected();
+    }
+
 
     public void signup() {
-        Log.d(TAG, "Signup");
+        if (isNetworkConnected()) {
+            Log.d(TAG, "Signup");
 
-        if (!validate()) {
-            onSignupFailed();
-            return;
+            if (!validate()) {
+                onSignupFailed();
+                return;
+            }
+
+            _signupButton.setEnabled(false);
+
+            final ProgressDialog progressDialog = new ProgressDialog(SignUpActivity.this,
+                    R.style.AppTheme_Dark_Dialog);
+            progressDialog.setIndeterminate(true);
+            progressDialog.setMessage("Creating Account...");
+            progressDialog.show();
+
+            String name = _nameText.getText().toString();
+            String email = _emailText.getText().toString();
+            String mobile = _mobileText.getText().toString();
+            String password = _passwordText.getText().toString();
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                setKeys(password);
+            }
+
+            if (TextUtils.isEmpty(userId)) {
+                createUser(name, email, mobile, role, publicKey, encrypted, password);
+            }
+
+            new Handler().postDelayed(
+                    new Runnable() {
+                        public void run() {
+                            onSignupSuccess();
+                            // onSignupFailed();
+                            progressDialog.dismiss();
+                        }
+                    }, 3000);
+        }else{
+            Toast.makeText(SignUpActivity.this, "No Internet Connection",
+                    Toast.LENGTH_SHORT).show();
         }
 
-        _signupButton.setEnabled(false);
-
-        final ProgressDialog progressDialog = new ProgressDialog(SignUpActivity.this,
-                R.style.AppTheme_Dark_Dialog);
-        progressDialog.setIndeterminate(true);
-        progressDialog.setMessage("Creating Account...");
-        progressDialog.show();
-
-        String name = _nameText.getText().toString();
-        String email = _emailText.getText().toString();
-        String mobile = _mobileText.getText().toString();
-        String password = _passwordText.getText().toString();
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            setKeys(password);
-        }
-
-        if (TextUtils.isEmpty(userId)) {
-            createUser(name, email, mobile, role, publicKey);
-        }
-
-        new Handler().postDelayed(
-                new Runnable() {
-                    public void run() {
-                        onSignupSuccess();
-                        // onSignupFailed();
-                        progressDialog.dismiss();
-                    }
-                }, 3000);
     }
 
 
@@ -217,6 +232,21 @@ public class SignUpActivity extends AppCompatActivity implements AdapterView.OnI
     }
 
     public void onSignupFailed() {
+//        mFirebaseDatabase.child(userId).addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//
+//                UserDetails user = dataSnapshot.getValue(UserDetails.class);
+//
+//                Log.d(TAG, "User name: " + user.getUserStatus() + ", email " + user.getEncryptedPvtKey());
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError error) {
+//                // Failed to read value
+//                Log.w(TAG, "Failed to read value.", error.toException());
+//            }
+//        });
         Toast.makeText(getBaseContext(), "SignUp failed", Toast.LENGTH_LONG).show();
 
         _signupButton.setEnabled(true);
@@ -293,12 +323,12 @@ public class SignUpActivity extends AppCompatActivity implements AdapterView.OnI
 
             String secretKey = signupPassword; //getting signup password of the user
             String privateKeyString = privateKey; //get user rsa private key genarated
-            String encryptedPrivateKeyString = PassEncryption.encrypt(privateKeyString, secretKey) ;//encrypt the private key using user password
+             encrypted = PassEncryption.encrypt(privateKeyString, secretKey) ;//encrypt the private key using user password
 
 
-            System.out.println(encryptedPrivateKeyString);
-            String encrypted = c.encrypt(encryptedPrivateKeyString); // returns base 64 data: 'BASE64_DATA,BASE64_IV'
-            c.save(KEY_NAME, encrypted);
+//            System.out.println(encryptedPrivateKeyString);
+//            encrypted = c.encrypt(encryptedPrivateKeyString); // returns base 64 data: 'BASE64_DATA,BASE64_IV'
+//            c.save(KEY_NAME, encrypted);
 
         }catch (Exception e){
             e.printStackTrace();
